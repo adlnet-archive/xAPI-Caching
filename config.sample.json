@@ -1,0 +1,6 @@
+{
+	"lrs": {
+		"endpoint": "https://lrs.adlnet.gov/xAPI/"
+	},
+	"freshenInterval": 6
+}
