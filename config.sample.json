@@ -1,10 +1,12 @@
 {
 	"manualFreshen": true,
 	"port": 3003,
+
 	"lrs": {
-		"endpoint": "https://lrs.adlnet.gov/xAPI/"
+		"endpoint": "https://lrs.adlnet.gov/xAPI/",
 		"comment": "Can use 'username' and 'password' keys here too"
 	},
+
 	"collections": {
 		"verbFrequency": {
 			"initialQuery": {},
