@@ -1,6 +1,20 @@
 {
+	"manualFreshen": true,
+	"port": 3003,
 	"lrs": {
 		"endpoint": "https://lrs.adlnet.gov/xAPI/"
+		"comment": "Can use 'username' and 'password' keys here too"
 	},
-	"freshenInterval": 6
+	"collections": {
+		"verbFrequency": {
+			"initialQuery": {},
+			"commands": [
+				["groupBy", "verb.id"],
+				["count"],
+				["select", "group, count, sample.verb.display.en-US as label"],
+				["orderBy", "count", "desc"]
+			],
+			"freshenInterval": 6
+		}
+	}
 }
