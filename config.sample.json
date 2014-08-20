@@ -16,7 +16,7 @@
 				["select", "group, count, sample.verb.display.en-US as label"],
 				["orderBy", "count", "desc"]
 			],
-			"freshenInterval": 6
+			"freshenInterval": "1H"
 		}
 	}
 }

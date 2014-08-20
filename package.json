@@ -11,6 +11,7 @@
   "license": "Apache 2",
   "dependencies": {
     "express": "~4.8.5",
-    "request": "~2.40.0"
+    "request": "~2.40.0",
+    "node-iso8601": "~1.0.0"
   }
 }
