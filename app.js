@@ -4,22 +4,36 @@
 
 var http = require('http'),
 	express = require('express'),
-	//iso8601 = require('node-iso8601'),
+	morgan = require('morgan'),
 	
-	config = require('./config.json');
+	config = require('./config.json'),
+	process = require('./process.js');
 
 
 var app = express();
 
-app.post('/freshen', function(req,res,next)
+app.use(morgan('combined'));
+
+app.post('/:collectId/freshen', function(req,res,next)
 {
-	if(config.manualFreshen === true)
+	if( config.collections[req.params.collectId] )
 	{
-		res.status(200).send();
+		if(config.collections[req.params.collectId].manualFreshen === true)
+			process.freshen(req.params.collectId, req,res);
+		else
+			res.status(403).send();
 	}
 	else {
-		res.status(403).send();
+		next();
 	}
+});
+
+app.get('/:collectId', function(req,res,next)
+{
+	if( config.collections[req.params.collectId] )
+		process.serveResults(req.params.collectId, req,res);
+	else
+		next();
 });
 
 app.get('/', function(req,res,next){
@@ -28,8 +42,8 @@ app.get('/', function(req,res,next){
 
 // all else fails, 404
 app.use(function(req,res){
-	res.status(404).send();
+	res.status(404).send('<h1>404 Not Found</h1>');
 });
 
 http.createServer(app).listen(config.port);
-
+console.log('Listening on port '+config.port);

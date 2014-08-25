@@ -1,5 +1,4 @@
 {
-	"manualFreshen": true,
 	"port": 3003,
 
 	"lrs": {
@@ -9,14 +8,15 @@
 
 	"collections": {
 		"verbFrequency": {
-			"initialQuery": {},
+			"initialQuery": {"verb":"http://adlnet.gov/expapi/verbs/launched"},
 			"commands": [
 				["groupBy", "verb.id"],
 				["count"],
 				["select", "group, count, sample.verb.display.en-US as label"],
 				["orderBy", "count", "desc"]
 			],
-			"freshenInterval": "1H"
+			"freshenInterval": "6 hours",
+			"manualFreshen": true
 		}
 	}
 }

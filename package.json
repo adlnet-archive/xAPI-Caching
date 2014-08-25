@@ -2,7 +2,7 @@
   "name": "xAPI-Caching",
   "version": "0.0.0",
   "description": "Download xAPI data, pre-compute statistics, serve",
-  "main": "server.js",
+  "main": "app.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js"
@@ -12,6 +12,7 @@
   "dependencies": {
     "express": "~4.8.5",
     "request": "~2.40.0",
-    "node-iso8601": "~1.0.0"
+    "moment": "~2.8.1",
+    "morgan": "~1.2.3"
   }
 }
