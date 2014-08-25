@@ -1,5 +1,6 @@
 {
 	"port": 3003,
+	"freshenInterval": "6 hours",
 
 	"lrs": {
 		"endpoint": "https://lrs.adlnet.gov/xAPI/",
@@ -8,14 +9,23 @@
 
 	"collections": {
 		"verbFrequency": {
-			"initialQuery": {"verb":"http://adlnet.gov/expapi/verbs/launched"},
+			"initialQuery": {},
 			"commands": [
 				["groupBy", "verb.id"],
 				["count"],
 				["select", "group, count, sample.verb.display.en-US as label"],
 				["orderBy", "count", "desc"]
 			],
-			"freshenInterval": "6 hours",
+			"manualFreshen": true
+		},
+		"lrsActivity": {
+			"sharesDataWith": "verbFrequency",
+			"commands": [
+				["groupBy", "stored", ["2014-07-25T00:00:00Z","2014-08-25T00:00:00Z", 86400000]],
+				["count"],
+				["select","groupStart as day, count as stmtCount"],
+				["orderBy", "day"]
+			],
 			"manualFreshen": true
 		}
 	}

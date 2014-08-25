@@ -9,7 +9,8 @@ var request = require('request'),
 	libpath = require('path'),
 	liburl = require('url'),
 
-	config = require('./config.json');
+	config = require('./config.json'),
+	XAPICollection = require('./xapicollection.js').CollectionSync;
 
 
 var digest = {};
@@ -17,7 +18,6 @@ var digest = {};
 
 exports.freshen = function(collectId, req,res)
 {
-	console.log('Freshening', collectId);
 
 	// create data directory if it doesn't exist
 	try {
@@ -26,10 +26,15 @@ exports.freshen = function(collectId, req,res)
 	}
 	catch(e){}
 
+	console.log('Freshening', collectId);
+	var collectConfig = config.collections[collectId];
+
+
 	// load cached statements
 	var json = '';
 
-	var gzCache = libfs.createReadStream( libpath.join(__dirname, 'data', collectId+'.json.gz') );
+	var cacheId = collectConfig.sharesDataWith ? collectConfig.sharesDataWith : collectId;
+	var gzCache = libfs.createReadStream( libpath.join(__dirname, 'data', cacheId+'.json.gz') );
 	gzCache.on('error', function(err){
 		console.log('Error opening file');
 		handleFileJsonData();
@@ -53,55 +58,59 @@ exports.freshen = function(collectId, req,res)
 		// parse cached statements if present
 		try {
 			statements = JSON.parse(json);
-			console.log(statements.length, 'statements retrieved from cache');
+			console.log('Statements retrieved from cache:', statements.length);
 		}
 		catch(e){
 			console.log('No previous data for '+collectId+', starting fresh.');
 			statements = [];
 		}
 
-		// get timestamp of last known statement
-		var since;
-		if( statements.length > 0 )
-			since = statements[statements.length-1].stored;
+		if( collectConfig.initialQuery )
+		{
+			// get timestamp of last known statement
+			var since;
+			if( statements.length > 0 )
+				since = statements[statements.length-1].stored;
 
-		// build request options
-		var qs = {'since': since, 'ascending': true};
-		for(var i in config.collections[collectId].initialQuery){
-			qs[i] = config.collections[collectId].initialQuery[i];
+			// build request options
+			var qs = {'since': since, 'ascending': true};
+			for(var i in collectConfig.initialQuery){
+				qs[i] = collectConfig.initialQuery[i];
+			}
+
+			var options = {
+				'method': 'GET',
+				'url': liburl.resolve(config.lrs.endpoint, 'statements'),
+				'headers': {'X-Experience-API-Version': '1.0.1'},
+				'qs': qs
+			};
+
+			if(config.lrs.username && config.lrs.password)
+				options.auth = {'user': config.lrs.username, 'pass': config.lrs.password};
+
+			// make the request to the LRS
+			request(options, requestCb);
 		}
-
-		var options = {
-			'method': 'GET',
-			'url': liburl.resolve(config.lrs.endpoint, 'statements'),
-			'headers': {'X-Experience-API-Version': '1.0.1'},
-			'qs': qs
-		};
-
-		if(config.lrs.username && config.lrs.password)
-			options.auth = {'user': config.lrs.username, 'pass': config.lrs.password};
-
-		console.log(options);
-
-		// make the request to the LRS
-		request(options, requestCb);
+		else {
+			processStatements();
+		}
 	}
 
 	
 	function requestCb(err,resp,body)
 	{
+		// fail on error
 		if(err){
-			console.log(err);
-			res.status(500).send(err);
-			return;
+			console.log('Error retrieving from LRS', err);
+			processStatements();
 		}
 		else {
+			// parse response, save out statements
 			var newData = JSON.parse(body);
-			console.log('Statements retrieved:', newData.statements.length);
-			console.log('More url:', newData.more);
-
+			console.log('Statements retrieved from LRS:', newData.statements.length);
 			Array.prototype.push.apply(statements, newData.statements);
 
+			// get next page of statements if available
 			if(newData.more){
 				request.get(
 					liburl.resolve(config.lrs.endpoint, newData.more),
@@ -110,15 +119,15 @@ exports.freshen = function(collectId, req,res)
 				);
 			}
 			else {
-				processStatements();
+				saveNewStatements();
 			}
 		}
 	}
 
 
-	function processStatements()
+	function saveNewStatements()
 	{
-		console.log(statements.length, 'statements retrieved');
+		console.log('Total statements:', statements.length);
 
 		// compress and save new statement cache
 		var output = zlib.createGzip();
@@ -131,12 +140,31 @@ exports.freshen = function(collectId, req,res)
 		});
 		output.pipe(gzOutput);
 		output.write(JSON.stringify(statements), 'utf8', function(){
-			statements = null;
 			output.end()
 		});
 
-		
+		processStatements();
+	}
 
+	function processStatements()
+	{
+		// process statements using the xAPI Collection class
+		var collection = new XAPICollection(statements);
+
+		// loop over commands in config file and apply
+		try
+		{
+			var commands = config.collections[collectId].commands;
+			for( var i=0; i<commands.length; i++ ){
+				collection = collection[commands[i][0]].apply(collection, commands[i].slice(1));
+			}
+			digest[collectId] = collection.contents;
+		}
+		catch(e){
+			console.log('Error while processing statements', e);
+		}
+
+		// respond with processed statements and we're done!
 		res.status(200).send();
 	}
 
@@ -145,5 +173,8 @@ exports.freshen = function(collectId, req,res)
 
 exports.serveResults = function(collectId, req,res)
 {
-	res.status(200).send('Page for '+collectId);
+	if(digest[collectId])
+		res.send(digest[collectId]);
+	else
+		next();
 };
