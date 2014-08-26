@@ -3,7 +3,6 @@
  */
 
 var request = require('request'),
-	moment = require('moment'),
 	zlib = require('zlib'),
 	libfs = require('fs'),
 	libpath = require('path'),
@@ -16,15 +15,23 @@ var request = require('request'),
 var digest = {};
 
 
-exports.intervalFreshen = function()
+function intervalRefresh(done)
 {
-	
-};
+	var i = 0;
+
+	function genCb(){
+		if(i<config.refreshOrder.length)
+			refresh(config.refreshOrder[i++], null, null, genCb);
+		else if(done)
+			done();
+	}
+
+	genCb();
+}
 
 
-exports.freshen = function(collectId, req,res,next)
+function refresh(collectId, req,res,next)
 {
-
 	// create data directory if it doesn't exist
 	try {
 		libfs.mkdirSync( libpath.join(__dirname, 'data') );
@@ -32,7 +39,7 @@ exports.freshen = function(collectId, req,res,next)
 	}
 	catch(e){}
 
-	console.log('Freshening', collectId);
+	console.log('Refreshing', collectId);
 	var collectConfig = config.collections[collectId];
 
 
@@ -64,7 +71,6 @@ exports.freshen = function(collectId, req,res,next)
 		// parse cached statements if present
 		try {
 			statements = JSON.parse(json);
-			console.log('Statements retrieved from cache:', statements.length);
 		}
 		catch(e){
 			console.log('No previous data for '+collectId+', starting fresh.');
@@ -133,8 +139,6 @@ exports.freshen = function(collectId, req,res,next)
 
 	function saveNewStatements()
 	{
-		console.log('Total statements:', statements.length);
-
 		// compress and save new statement cache
 		var output = zlib.createGzip();
 		output.on('error', function(err){
@@ -147,9 +151,9 @@ exports.freshen = function(collectId, req,res,next)
 		output.pipe(gzOutput);
 		output.write(JSON.stringify(statements), 'utf8', function(){
 			output.end()
+			processStatements();
 		});
 
-		processStatements();
 	}
 
 	function processStatements()
@@ -173,15 +177,23 @@ exports.freshen = function(collectId, req,res,next)
 		// respond with processed statements and we're done!
 		if(res)
 			res.status(200).send();
+		else if(next)
+			next();
 	}
 
-};
+}
 
 
-exports.serveResults = function(collectId, req,res)
+function serveResults(collectId, req,res)
 {
 	if(digest[collectId])
 		res.send(digest[collectId]);
 	else
 		next();
-};
+}
+
+
+exports.intervalRefresh = intervalRefresh;
+exports.refresh = refresh;
+exports.serveResults = serveResults;
+

@@ -1,6 +1,6 @@
 {
 	"port": 3003,
-	"freshenInterval": "6 hours",
+	"refreshInterval": "3 hours",
 
 	"lrs": {
 		"endpoint": "https://lrs.adlnet.gov/xAPI/",
@@ -16,7 +16,7 @@
 				["select", "group, count, sample.verb.display.en-US as label"],
 				["orderBy", "count", "desc"]
 			],
-			"manualFreshen": true
+			"manualRefresh": true
 		},
 		"lrsActivity": {
 			"sharesDataWith": "verbFrequency",
@@ -26,7 +26,7 @@
 				["select","groupStart as day, count as stmtCount"],
 				["orderBy", "day"]
 			],
-			"manualFreshen": true
+			"manualRefresh": true
 		}
 	}
 }
