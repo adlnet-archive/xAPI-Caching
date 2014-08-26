@@ -19,6 +19,7 @@ var http = require('http'),
 	// verify sane collection dependencies
 	var cs = Object.keys(config.collections);
 	
+	var refreshable = true;
 	var i = 0;
 	while( i < cs.length )
 	{
@@ -46,16 +47,18 @@ var http = require('http'),
 			cs.push(cs.splice(i,1));
 		}
 		else {
+			refreshable |= c.manualRefresh;
 			i++;
 		}
 	}
 
 	config.refreshOrder = cs;
+	config.globalRefresh = refreshable;
 
 })();
 
-process.intervalRefresh(function(){
-
+process.intervalRefresh(function()
+{
 	var app = express();
 
 	app.use(compression());
@@ -79,6 +82,17 @@ process.intervalRefresh(function(){
 	{
 		if( config.collections[req.params.collectId] )
 			process.serveResults(req.params.collectId, req,res);
+		else
+			next();
+	});
+
+	app.post('/refresh', function(req,res,next)
+	{
+		if(config.globalRefresh){
+			process.intervalRefresh(function(){
+				res.status(200).send();
+			});
+		}
 		else
 			next();
 	});
