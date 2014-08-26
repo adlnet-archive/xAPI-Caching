@@ -23,10 +23,10 @@ module.exports = {
 			"commands": function(c){
 				var lastMonth = new Date(Date.now()-1000*60*60*24*30);
 				return c
-					.groupBy('stored', [lastMonth.toISOString(),(new Date()).toISOString(), 86400000])
+					.groupBy('stored', [lastMonth.toISOString(),(new Date()).toISOString(), 1000*60*60*24])
 					.count()
-					.select('groupStart as day, count as stmtCount')
-					.orderBy('day');
+					.select('groupStart, groupEnd, count as stmtCount')
+					.orderBy('groupStart');
 			},
 			"manualRefresh": true
 		}
