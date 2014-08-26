@@ -6,11 +6,11 @@ var http = require('http'),
 	express = require('express'),
 	morgan = require('morgan'),
 	moment = require('moment'),
+	compression = require('compression'),
 	
 	config = require('./config.js'),
 	process = require('./process.js');
 
-console.log(config);
 
 (function checkConfigSanity()
 {
@@ -58,6 +58,7 @@ process.intervalRefresh(function(){
 
 	var app = express();
 
+	app.use(compression());
 	app.use(morgan('combined'));
 
 	app.post('/:collectId/refresh', function(req,res,next)
@@ -83,7 +84,7 @@ process.intervalRefresh(function(){
 	});
 
 	app.get('/', function(req,res,next){
-		res.send('Hello World!');
+		res.send(Object.keys(config.collections));
 	});
 
 	// all else fails, 404

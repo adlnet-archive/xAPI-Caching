@@ -29,6 +29,10 @@ module.exports = {
 					.orderBy('groupStart');
 			},
 			"manualRefresh": true
+		},
+		"rawData": {
+			"sharesDataWith": "verbFrequency",
+			"commands": []
 		}
 	}
 };
