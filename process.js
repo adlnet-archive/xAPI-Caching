@@ -16,7 +16,13 @@ var request = require('request'),
 var digest = {};
 
 
-exports.freshen = function(collectId, req,res)
+exports.intervalFreshen = function()
+{
+	
+};
+
+
+exports.freshen = function(collectId, req,res,next)
 {
 
 	// create data directory if it doesn't exist
@@ -165,7 +171,8 @@ exports.freshen = function(collectId, req,res)
 		}
 
 		// respond with processed statements and we're done!
-		res.status(200).send();
+		if(res)
+			res.status(200).send();
 	}
 
 };
