@@ -1,4 +1,4 @@
-{
+module.exports = {
 	"port": 3003,
 	"refreshInterval": "3 hours",
 
@@ -20,13 +20,15 @@
 		},
 		"lrsActivity": {
 			"sharesDataWith": "verbFrequency",
-			"commands": [
-				["groupBy", "stored", ["2014-07-25T00:00:00Z","2014-08-25T00:00:00Z", 86400000]],
-				["count"],
-				["select","groupStart as day, count as stmtCount"],
-				["orderBy", "day"]
-			],
+			"commands": function(c){
+				var lastMonth = new Date(Date.now()-1000*60*60*24*30);
+				return c
+					.groupBy('stored', [lastMonth.toISOString(),(new Date()).toISOString(), 86400000])
+					.count()
+					.select('groupStart as day, count as stmtCount')
+					.orderBy('day');
+			},
 			"manualRefresh": true
 		}
 	}
-}
+};

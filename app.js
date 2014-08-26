@@ -7,9 +7,10 @@ var http = require('http'),
 	morgan = require('morgan'),
 	moment = require('moment'),
 	
-	config = require('./config.json'),
+	config = require('./config.js'),
 	process = require('./process.js');
 
+console.log(config);
 
 (function checkConfigSanity()
 {

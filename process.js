@@ -8,7 +8,7 @@ var request = require('request'),
 	libpath = require('path'),
 	liburl = require('url'),
 
-	config = require('./config.json'),
+	config = require('./config.js'),
 	XAPICollection = require('./xapicollection.js').CollectionSync;
 
 
@@ -162,11 +162,16 @@ function refresh(collectId, req,res,next)
 		var collection = new XAPICollection(statements);
 
 		// loop over commands in config file and apply
+		var commands = config.collections[collectId].commands;
 		try
 		{
-			var commands = config.collections[collectId].commands;
-			for( var i=0; i<commands.length; i++ ){
-				collection = collection[commands[i][0]].apply(collection, commands[i].slice(1));
+			if( typeof(commands) === 'function' ){
+				collection = commands(collection);
+			}
+			else {
+				for( var i=0; i<commands.length; i++ ){
+					collection = collection[commands[i][0]].apply(collection, commands[i].slice(1));
+				}
 			}
 			digest[collectId] = collection.contents;
 		}
