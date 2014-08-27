@@ -13,8 +13,8 @@ module.exports = {
 			"commands": [
 				["groupBy", "verb.id"],
 				["count"],
-				["select", "group, count, sample.verb.display.en-US as label"],
-				["orderBy", "count", "desc"]
+				["select", "group as in, count as out, sample.verb.display.en-US as label"],
+				["orderBy", "out", "desc"]
 			],
 			"manualRefresh": true
 		},

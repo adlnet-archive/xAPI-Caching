@@ -7,6 +7,7 @@ var http = require('http'),
 	morgan = require('morgan'),
 	moment = require('moment'),
 	compression = require('compression'),
+	cors = require('cors'),
 	
 	config = require('./config.js'),
 	process = require('./process.js');
@@ -63,6 +64,7 @@ process.intervalRefresh(function()
 
 	app.use(compression());
 	app.use(morgan('combined'));
+	app.use(cors());
 
 	app.post('/:collectId/refresh', function(req,res,next)
 	{

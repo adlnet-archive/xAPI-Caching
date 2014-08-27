@@ -194,7 +194,7 @@ function serveResults(collectId, req,res)
 	if(digest[collectId])
 		res.send(digest[collectId]);
 	else
-		next();
+		res.status(500).send();
 }
 
 
